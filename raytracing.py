@@ -100,19 +100,8 @@ def trace_ray(rayO, rayD):
     # Find properties of the object.
     N = get_normal(obj, M)
     color = get_color(obj, M)
-    toL = normalize(L - M)
-    toO = normalize(O - M)
-    # Shadow: find if the point is shadowed or not.
-    l = [intersect(M + N * .0001, toL, obj_sh) 
-            for k, obj_sh in enumerate(scene) if k != obj_idx]
-    if l and min(l) < np.inf:
-        return
     # Start computing the color.
-    col_ray = ambient
-    # Lambert shading (diffuse).
-    col_ray += obj.get('diffuse_c', diffuse_c) * max(np.dot(N, toL), 0) * color
-    # Blinn-Phong shading (specular).
-    col_ray += obj.get('specular_c', specular_c) * max(np.dot(N, normalize(toL + toO)), 0) ** specular_k * color_light
+    col_ray = compute_light(obj, N, M, color, obj_idx)
     return obj, M, N, col_ray
 
 def add_sphere(position, radius, color):
@@ -125,6 +114,29 @@ def add_plane(position, normal):
         color=lambda M: (color_plane0 
             if (int(M[0] * 2) % 2) == (int(M[2] * 2) % 2) else color_plane1),
         diffuse_c=.75, specular_c=.5, reflection=.25)
+
+def compute_light(obj, N, M, color, obj_idx):
+    toO = normalize(O - M)
+    col_ray = ambient
+    for light in light_set:
+        toL = normalize(light["position"] - M)
+        # Shadow: find if the point is shadowed or not.
+        l = [intersect(M + N * .0001, toL, obj_sh) 
+                for k, obj_sh in enumerate(scene) if k != obj_idx]
+        if l and min(l) >= np.inf:
+            # Lambert shading (diffuse).
+            col_ray += (
+                color
+                * obj.get('diffuse_c', diffuse_c)
+                * max(np.dot(N, toL), 0) 
+            )
+            # Blinn-Phong shading (specular).
+            col_ray += (
+                light["color"]
+                * obj.get('specular_c', specular_c)
+                * max(np.dot(N, normalize(toL + toO)), 0) ** specular_k 
+            )       
+    return col_ray
     
 # List of objects.
 color_plane0 = 1. * np.ones(3)
@@ -135,9 +147,18 @@ scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
          add_plane([0., -.5, 0.], [0., 1., 0.]),
     ]
 
-# Light position and color.
-L = np.array([5., 5., -10.])
-color_light = np.ones(3)
+# Define here a Light Set with position and color for each individual light.
+light1 = {
+  "position": np.array([5., 5., -10.]),
+  "color": np.ones(3)
+}
+
+light2 = {
+  "position": np.array([-5., 5., -5.]),
+  "color": np.ones(3)
+}
+
+light_set = [light1, light2]
 
 # Default light and material parameters.
 ambient = .05
@@ -179,4 +200,4 @@ for i, x in enumerate(np.linspace(S[0], S[2], w)):
             reflection *= obj.get('reflection', 1.)
         img[h - j - 1, i, :] = np.clip(col, 0, 1)
 
-plt.imsave('fig.png', img)
+plt.imsave('fig2Lights.png', img)
