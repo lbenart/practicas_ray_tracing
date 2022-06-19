@@ -148,17 +148,24 @@ scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
     ]
 
 # Define here a Light Set with position and color for each individual light.
+
+# original
 light1 = {
   "position": np.array([5., 5., -10.]),
   "color": np.ones(3)
 }
-
+# cyan
 light2 = {
   "position": np.array([-5., 5., -5.]),
-  "color": np.ones(3)
+  "color":  np.array([0., 1., 1.])
+}
+# magenta
+light3 = {
+  "position": np.array([-15., 1., -5.]),
+  "color":  np.array([1., 0., 1.])
 }
 
-light_set = [light1, light2]
+light_set = [light1, light2, light3]
 
 # Default light and material parameters.
 ambient = .05
@@ -200,4 +207,4 @@ for i, x in enumerate(np.linspace(S[0], S[2], w)):
             reflection *= obj.get('reflection', 1.)
         img[h - j - 1, i, :] = np.clip(col, 0, 1)
 
-plt.imsave('fig2Lights.png', img)
+plt.imsave('fig3Lights.png', img)
