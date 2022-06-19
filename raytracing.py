@@ -44,6 +44,68 @@ def intersect_plane(O, D, P, N):
         return np.inf
     return d
 
+def intersect_triangle(O, D, v0, v1, v2):
+    # Return the distance from O to the intersection of the ray (O, D) with the 
+    # triangle (v1, v2, v3), or +inf if there is no intersection.
+    
+    N = triangle_plane_normal(v0,v1,v2)
+
+    denom = np.dot(D, N)
+
+    # Check if ray and plane are parallel ?
+    if np.abs(denom) < 1e-6:
+        return np.inf  # parallel, they dont intersect
+    
+    d = np.dot(v0 - O, N) / denom
+    if d < 0:
+        return np.inf
+    
+    # Find the point of intersection on the object.
+    M = O + D * d
+
+    if check_inside_triangle(v0, v1, v2, M, N) == False:
+        return np.inf  # the point of intersection M is not inside the triangle
+    
+    return d    
+
+
+def check_inside_triangle(v0, v1, v2, M, N):
+    # inside-outside test
+
+    # edge 0
+    edge0 = v1 - v0
+    vp0 = M - v0
+
+    # C: vector perpendicular to triangle's plane 
+    C = np.cross(edge0,vp0); 
+    if np.dot(N,C) < 0:
+        return False  #M is on the right side 
+ 
+    # edge 1
+    edge1 = v2 - v1 
+    vp1 = M - v1
+    C = np.cross(edge1,vp1); 
+    if np.dot(N,C) < 0:
+        return False  #M is on the right side 
+ 
+    # edge 2
+    edge2 = v0 - v2 
+    vp2 = M - v2 
+    C = np.cross(edge2,vp2); 
+    if np.dot(N,C) < 0:
+      return False  #M is on the right side 
+    
+    #this ray hits the triangle
+    return True
+
+
+def triangle_plane_normal(v0, v1, v2):
+    # compute plane's normal
+    v0v1 = v1-v0
+    v0v2 = v2-v0
+    N = np.cross(v0v1, v0v2)
+    return N
+
 def intersect_sphere(O, D, S, R):
     # Return the distance from O to the intersection of the ray (O, D) with the 
     # sphere (S, R), or +inf if there is no intersection.
@@ -68,6 +130,8 @@ def intersect(O, D, obj):
         return intersect_plane(O, D, obj['position'], obj['normal'])
     elif obj['type'] == 'sphere':
         return intersect_sphere(O, D, obj['position'], obj['radius'])
+    elif obj['type'] == 'triangle':
+        return intersect_triangle(O, D, obj['v0'], obj['v1'], obj['v2'])
 
 def get_normal(obj, M):
     # Find normal.
@@ -75,6 +139,8 @@ def get_normal(obj, M):
         N = normalize(M - obj['position'])
     elif obj['type'] == 'plane':
         N = obj['normal']
+    elif obj['type'] == 'triangle':
+        N = triangle_plane_normal(obj["v0"],obj["v1"],obj["v2"])   
     return N
     
 def get_color(obj, M):
@@ -115,6 +181,14 @@ def add_plane(position, normal):
             if (int(M[0] * 2) % 2) == (int(M[2] * 2) % 2) else color_plane1),
         diffuse_c=.75, specular_c=.5, reflection=.25)
 
+def add_triangle(position_v0, position_v1, position_v2, color):
+    return dict(type='triangle',
+                v0=np.array(position_v0),
+                v1=np.array(position_v1),
+                v2=np.array(position_v2),
+                color=np.array(color), 
+                reflection=.5)
+
 def compute_light(obj, N, M, color, obj_idx):
     toO = normalize(O - M)
     col_ray = ambient
@@ -141,11 +215,18 @@ def compute_light(obj, N, M, color, obj_idx):
 # List of objects.
 color_plane0 = 1. * np.ones(3)
 color_plane1 = 0. * np.ones(3)
+
+triangle_v0 = [-0.25, -0.25, -0.02]
+triangle_v1 = [-0.25,  0.25, -0.02]
+triangle_v2 = [0.25, -0.25, -0.02]
+triangle_color = [0., 0., 1.] #[1.,0.,0.] #red
+
 scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
          add_sphere([-.75, .1, 2.25], .6, [.5, .223, .5]),
          add_sphere([-2.75, .1, 3.5], .6, [1., .572, .184]),
          add_plane([0., -.5, 0.], [0., 1., 0.]),
-    ]
+         add_triangle(triangle_v0, triangle_v1, triangle_v2, triangle_color)
+        ]
 
 # Define here a Light Set with position and color for each individual light.
 
@@ -207,4 +288,4 @@ for i, x in enumerate(np.linspace(S[0], S[2], w)):
             reflection *= obj.get('reflection', 1.)
         img[h - j - 1, i, :] = np.clip(col, 0, 1)
 
-plt.imsave('fig3Lights.png', img)
+plt.imsave('triangle5.png', img)
