@@ -52,9 +52,9 @@ def intersect_triangle(O, D, v0, v1, v2):
 
     denom = np.dot(D, N)
 
-    # Check if ray and plane are parallel ?
+    # Check if ray and plane are parallel
     if np.abs(denom) < 1e-6:
-        return np.inf  # parallel, they dont intersect
+        return np.inf  # parallel, so they dont intersect
     
     d = np.dot(v0 - O, N) / denom
     if d < 0:
@@ -219,7 +219,7 @@ color_plane1 = 0. * np.ones(3)
 triangle_v0 = [0.25, -0.25, -0.25]
 triangle_v1 = [-0.25, -0.25, -0.25]
 triangle_v2 = [-0.25,  0.25, -0.25]
-triangle_color = [0., 0., 1.] #[1.,0.,0.] #red
+triangle_color = [0., 0., 1.]
 
 scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
          add_sphere([-.75, .1, 2.25], .6, [.5, .223, .5]),
@@ -248,8 +248,8 @@ light3 = {
 }
 
 #light_set = [light1, light2, light3]
-#light_set = [light1, light2]
-light_set = [light1]
+light_set = [light1, light2]
+#light_set = [light1]
 
 # Default light and material parameters.
 ambient = .05
@@ -291,4 +291,4 @@ for i, x in enumerate(np.linspace(S[0], S[2], w)):
             reflection *= obj.get('reflection', 1.)
         img[h - j - 1, i, :] = np.clip(col, 0, 1)
 
-plt.imsave('2triangle1light.png', img)
+plt.imsave('2triangle2light.png', img)
