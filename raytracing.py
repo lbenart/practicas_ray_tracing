@@ -103,8 +103,8 @@ def triangle_plane_normal(v0, v1, v2):
     # compute plane's normal
     v0v1 = v1-v0
     v0v2 = v2-v0
-    N = np.cross(v0v1, v0v2)
-    return N
+    N = np.cross(v0v1,v0v2)
+    return normalize(N)
 
 def intersect_sphere(O, D, S, R):
     # Return the distance from O to the intersection of the ray (O, D) with the 
@@ -216,16 +216,17 @@ def compute_light(obj, N, M, color, obj_idx):
 color_plane0 = 1. * np.ones(3)
 color_plane1 = 0. * np.ones(3)
 
-triangle_v0 = [-0.25, -0.25, -0.02]
-triangle_v1 = [-0.25,  0.25, -0.02]
-triangle_v2 = [0.25, -0.25, -0.02]
+triangle_v0 = [0.25, -0.25, -0.25]
+triangle_v1 = [-0.25, -0.25, -0.25]
+triangle_v2 = [-0.25,  0.25, -0.25]
 triangle_color = [0., 0., 1.] #[1.,0.,0.] #red
 
 scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
          add_sphere([-.75, .1, 2.25], .6, [.5, .223, .5]),
          add_sphere([-2.75, .1, 3.5], .6, [1., .572, .184]),
          add_plane([0., -.5, 0.], [0., 1., 0.]),
-         add_triangle(triangle_v0, triangle_v1, triangle_v2, triangle_color)
+         add_triangle(triangle_v0, triangle_v1, triangle_v2, triangle_color),
+         add_triangle([-0.25,-0.25,0.25],[-0.25,0.25,0.25],[0.25,0.25,0.25],[1.,0.,0.])
         ]
 
 # Define here a Light Set with position and color for each individual light.
@@ -246,7 +247,9 @@ light3 = {
   "color":  np.array([1., 0., 1.])
 }
 
-light_set = [light1, light2, light3]
+#light_set = [light1, light2, light3]
+#light_set = [light1, light2]
+light_set = [light1]
 
 # Default light and material parameters.
 ambient = .05
@@ -288,4 +291,4 @@ for i, x in enumerate(np.linspace(S[0], S[2], w)):
             reflection *= obj.get('reflection', 1.)
         img[h - j - 1, i, :] = np.clip(col, 0, 1)
 
-plt.imsave('triangle5.png', img)
+plt.imsave('2triangle1light.png', img)
