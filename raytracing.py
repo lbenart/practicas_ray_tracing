@@ -147,7 +147,7 @@ scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
          add_plane([0., -.5, 0.], [0., 1., 0.]),
     ]
 
-# Define here a Light Set with position and color for each individual light.
+# Define here a Light Set with custom position and color for each individual light.
 
 # original
 light1 = {
@@ -157,12 +157,12 @@ light1 = {
 # cyan
 light2 = {
   "position": np.array([-5., 5., -5.]),
-  "color":  np.array([0., 1., 1.])
+  "color": np.array([0., 1., 1.])
 }
 # magenta
 light3 = {
   "position": np.array([-15., 1., -5.]),
-  "color":  np.array([1., 0., 1.])
+  "color": np.array([1., 0., 1.])
 }
 
 light_set = [light1, light2, light3]
