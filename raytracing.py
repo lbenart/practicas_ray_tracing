@@ -147,7 +147,7 @@ scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
          add_plane([0., -.5, 0.], [0., 1., 0.]),
     ]
 
-# Define here a Light Set with custom position and color for each individual light.
+### Define here a Light Set with custom position and color for each individual light.
 
 # original
 light1 = {
