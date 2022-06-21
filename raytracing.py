@@ -69,6 +69,44 @@ def intersect_triangle(O, D, v0, v1, v2):
     return d    
 
 
+def intersect_sphere(O, D, S, R):
+    # Return the distance from O to the intersection of the ray (O, D) with the 
+    # sphere (S, R), or +inf if there is no intersection.
+    # O and S are 3D points, D (direction) is a normalized vector, R is a scalar.
+    a = np.dot(D, D)
+    OS = O - S
+    b = 2 * np.dot(D, OS)
+    c = np.dot(OS, OS) - R * R
+    disc = b * b - 4 * a * c
+    if disc > 0:
+        distSqrt = np.sqrt(disc)
+        q = (-b - distSqrt) / 2.0 if b < 0 else (-b + distSqrt) / 2.0
+        t0 = q / a
+        t1 = c / q
+        t0, t1 = min(t0, t1), max(t0, t1)
+        if t1 >= 0:
+            return t1 if t0 < 0 else t0
+    return np.inf
+
+def intersect(O, D, obj):
+    if obj['type'] == 'plane':
+        return intersect_plane(O, D, obj['position'], obj['normal'])
+    elif obj['type'] == 'sphere':
+        return intersect_sphere(O, D, obj['position'], obj['radius'])
+    elif obj['type'] == 'triangle':
+        return intersect_triangle(O, D, obj['v0'], obj['v1'], obj['v2'])
+
+def get_normal(obj, M):
+    # Find normal.
+    if obj['type'] == 'sphere':
+        N = normalize(M - obj['position'])
+    elif obj['type'] == 'plane':
+        N = obj['normal']
+    elif obj['type'] == 'triangle':
+        N = triangle_plane_normal(obj["v0"],obj["v1"],obj["v2"])   
+    return N
+
+
 def check_inside_triangle(v0, v1, v2, M, N):
     # inside-outside test
 
@@ -106,43 +144,7 @@ def triangle_plane_normal(v0, v1, v2):
     N = np.cross(v0v1,v0v2)
     return normalize(N)
 
-def intersect_sphere(O, D, S, R):
-    # Return the distance from O to the intersection of the ray (O, D) with the 
-    # sphere (S, R), or +inf if there is no intersection.
-    # O and S are 3D points, D (direction) is a normalized vector, R is a scalar.
-    a = np.dot(D, D)
-    OS = O - S
-    b = 2 * np.dot(D, OS)
-    c = np.dot(OS, OS) - R * R
-    disc = b * b - 4 * a * c
-    if disc > 0:
-        distSqrt = np.sqrt(disc)
-        q = (-b - distSqrt) / 2.0 if b < 0 else (-b + distSqrt) / 2.0
-        t0 = q / a
-        t1 = c / q
-        t0, t1 = min(t0, t1), max(t0, t1)
-        if t1 >= 0:
-            return t1 if t0 < 0 else t0
-    return np.inf
 
-def intersect(O, D, obj):
-    if obj['type'] == 'plane':
-        return intersect_plane(O, D, obj['position'], obj['normal'])
-    elif obj['type'] == 'sphere':
-        return intersect_sphere(O, D, obj['position'], obj['radius'])
-    elif obj['type'] == 'triangle':
-        return intersect_triangle(O, D, obj['v0'], obj['v1'], obj['v2'])
-
-def get_normal(obj, M):
-    # Find normal.
-    if obj['type'] == 'sphere':
-        N = normalize(M - obj['position'])
-    elif obj['type'] == 'plane':
-        N = obj['normal']
-    elif obj['type'] == 'triangle':
-        N = triangle_plane_normal(obj["v0"],obj["v1"],obj["v2"])   
-    return N
-    
 def get_color(obj, M):
     color = obj['color']
     if not hasattr(color, '__len__'):
@@ -216,20 +218,21 @@ def compute_light(obj, N, M, color, obj_idx):
 color_plane0 = 1. * np.ones(3)
 color_plane1 = 0. * np.ones(3)
 
-triangle_v0 = [0.25, -0.25, -0.25]
-triangle_v1 = [-0.25, -0.25, -0.25]
-triangle_v2 = [-0.25,  0.25, -0.25]
+triangle_v0 = [0.25,  -0.25, -0.25]
+triangle_v1 = [-0.55, -0.25, -0.25]
+triangle_v2 = [-0.55,  0.25, -0.25]
 triangle_color = [0., 0., 1.]
 
 scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
          add_sphere([-.75, .1, 2.25], .6, [.5, .223, .5]),
          add_sphere([-2.75, .1, 3.5], .6, [1., .572, .184]),
          add_plane([0., -.5, 0.], [0., 1., 0.]),
-         add_triangle(triangle_v0, triangle_v1, triangle_v2, triangle_color),
-         add_triangle([-0.25,-0.25,0.25],[-0.25,0.25,0.25],[0.25,0.25,0.25],[1.,0.,0.])
+         add_triangle(triangle_v0, triangle_v1, triangle_v2, [1.,0.,0.]),
+         add_triangle([-0.25,-0.25,0.25],[-0.25,0.25,0.25],[0.25,0.25,0.25],[0.,1.,0.])
         ]
 
-# Define here a Light Set with position and color for each individual light.
+
+### Define here a Light Set with position and color for each individual light.
 
 # original
 light1 = {
@@ -247,8 +250,8 @@ light3 = {
   "color":  np.array([1., 0., 1.])
 }
 
-#light_set = [light1, light2, light3]
-light_set = [light1, light2]
+light_set = [light1, light2, light3]
+#light_set = [light1, light2]
 #light_set = [light1]
 
 # Default light and material parameters.
@@ -291,4 +294,4 @@ for i, x in enumerate(np.linspace(S[0], S[2], w)):
             reflection *= obj.get('reflection', 1.)
         img[h - j - 1, i, :] = np.clip(col, 0, 1)
 
-plt.imsave('2triangle2light.png', img)
+plt.imsave('2triangles3lights.png', img)
